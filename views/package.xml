@@ -1,0 +1,23 @@
+<!--<?xml version="1.0" encoding="" ?>-->
+<odoo>
+    <data>
+        <record id="smartship_form_view" model="ir.ui.view">
+            <field name="name">product.packaging</field>
+            <field name="model">product.packaging</field>
+            <field name="inherit_id" ref="delivery.product_packaging_delivery_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='shipper_package_code']" position='after'>
+<!--                    <field name="freightcom_tracking_url" widget="url" readonly="1" attrs="{'invisible': [('delivery_type','!=','freightcom')]}"></field>-->
+                    <field name="carrier_record_id"></field>
+                    <field name="smart_date_aaded"></field>
+                    <field name="smart_date_edited"></field>
+                    <field name="shipper_id"></field>
+                    <field name="pkg_id"></field>
+                    <field name="is_courier"></field>
+                    <field name="is_default_type"></field>
+                    <field name="is_active"></field>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
