@@ -1,4 +1,5 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_smartship_salesman,smartship,model_smartship_shipping_charge,sales_team.group_sale_salesman,1,1,1,0
 access_smartship_salesmanager,smartship_manager,model_smartship_shipping_charge,sales_team.group_sale_manager,1,1,1,1
-
+access_smarttship_sync,smarttship_sync_name,model_smarttship_sync,base.group_user,1,1,1,1
+access_res_city_smarttship,res_city_smarttship_name,model_res_city_smarttship,base.group_user,1,1,1,1

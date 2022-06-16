@@ -26,6 +26,7 @@
         'views/views.xml',
         'views/templates.xml',
         'views/package.xml',
+        'views/customer.xml',
     ],
     # only loaded in demonstration mode
     'demo': [

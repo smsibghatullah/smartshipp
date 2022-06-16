@@ -1,6 +1,7 @@
 from odoo import models, fields,_,api
+from odoo.exceptions import ValidationError
 import logging
-# import request
+import requests
 import json
 
 # class SmartshipShippingPackage(models.Model):
@@ -33,32 +34,34 @@ class ProductPackaging(models.Model):
     @api.model
     def create(self, vals):
         rec = super(ProductPackaging, self).create(vals)
+        if rec.package_carrier_type == 'smartship':
+            headers = {
+                'apikey': '7474CAE8-35BA-47DE-983D-2DE16EDEB118',
+                'Content-Type': 'application/json'
+            }
+            url = "https://api.sandbox.smarttshipping.ca/api/carrierApi/AddOrEditPackage"
+            payload = json.dumps({
+                    "PackageId": 0,
+                    "PackageName": str(rec.name),
+                    # "PackageTypeName": "Baljeet",
+                    # "DateAdded": "2016-09-29T10:31:53.297",
+                    # "DateEdited": "2018-04-12T00:00:00",
+                    # "IsActive": True,
+                    # "IsDefaultPackageType": False,
+                    # "CarrierId": 4,
+                    # "Width":3,
+                    # "Height": 1,
+                    # "Length": 2,
+                    # "IsCourier": True
+                })
 
-        # url = "https://api.smarttshipping.ca/api/carrierApi/GetAllPackages"
-        #
-        # payload = json.dumps({
-        # "Packages": [
-        #     {
-        #         "PackageID": 3127,
-        #         "ShipperID": 313,
-        #         "PackageTypeName": "Baljeet",
-        #         # "DateAdded": "2016-09-29T10:31:53.297",
-        #         # "DateEdited": "2018-04-12T00:00:00",
-        #         "IsActive": True,
-        #         "IsDefaultPackageType": False,
-        #         "CarrierId": 0,
-        #         "width":0,
-        #         "height": 0,
-        #         "length": 0,
-        #         "is"
-        #     }
-        # ]
-        # }
-        # )
-
-
-
-
+            response = requests.request("POST", url, headers=headers, data=payload)
+            response_dict = json.loads(response.text)
+            if response_dict.get('Success') == True:
+                rec.pkg_id = response_dict.get('Package').get('PackageID')
+                rec.shipper_id = response_dict.get('Package').get('ShipperID')
+            else:
+                raise ValidationError(_(str(response_dict.get('Message'))))
         return rec
 
 

@@ -3,3 +3,4 @@
 from . import models
 from . import smartshippng_charge
 from . import package
+from . import customer

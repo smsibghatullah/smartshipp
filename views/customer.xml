@@ -1,0 +1,53 @@
+<!--<?xml version="1.0" encoding="" ?>-->
+<odoo>
+    <data>
+
+
+
+         <record id="smarttship_sync_wizard_view" model="ir.ui.view">
+            <field name="name">smarttship.sync.wizard.viewss</field>
+            <field name="model">smarttship.sync</field>
+            <field name="arch" type="xml">
+                <form>
+                    <group>
+                        <field name="sync_city"/>
+                    </group>
+                    <footer>
+                        <button name="sync_records" string="Done" class="btn-secondary" type="object"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+
+        <record id="smarttship_sync_wizard_view_action" model="ir.actions.act_window">
+            <field name="name">Smarttship Sync</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">smarttship.sync</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="view_id" ref="smarttship_sync_wizard_view"/>
+        </record>
+
+
+        <!-- Top menu item -->
+        <menuitem id="smarttship_sync_main_menu" name="Smarttship Sync" action="smarttship_sync_wizard_view_action"/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    </data>
+</odoo>

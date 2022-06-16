@@ -19,6 +19,7 @@ class DeliveryCarrier(models.Model):
     _inherit = "delivery.carrier"
 
     delivery_type = fields.Selection(selection_add=[("smartship", "SmartShip")],ondelete={'smartship': 'set default'})
+    delivery_type = fields.Selection(selection_add=[("smartship", "SmartShip")],ondelete={'smartship': 'set default'})
     package_id = fields.Many2one('product.packaging', string="package", help="please select package type")
 
     def smartship_rate_shipment(self, orders):
