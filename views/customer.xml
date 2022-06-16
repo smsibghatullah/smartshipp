@@ -11,6 +11,7 @@
                 <form>
                     <group>
                         <field name="sync_city"/>
+                        <field name="sync_state"/>
                     </group>
                     <footer>
                         <button name="sync_records" string="Done" class="btn-secondary" type="object"/>
