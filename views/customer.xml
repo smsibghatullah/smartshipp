@@ -3,6 +3,44 @@
     <data>
 
 
+        <record id="view_partner_form_inherit_smarttship" model="ir.ui.view">
+        <field name="name">view.partner.form.inherit.smarttship</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='internal_notes']" position="after">
+                <page string="Smarttship" name="smarttship" attrs="{'invisible': [('company_type','!=','person')]}">
+                    <group>
+                        <field name="smarttship_customer" string="Is Smarttship Customer"/>
+                        <field name="special_instructions"/>
+                        <field name="broker_name"/>
+                        <field name="contact_name"/>
+                    </group>
+                    <group>
+                        <field name="opening_time"/>
+                        <field name="closing_time"/>
+                        <field name="account_no"/>
+                    </group>
+                    <group>
+                        <field name="primary_contact_position"/>
+                        <field name="primary_contact_phone"/>
+                        <field name="secondary_contact_name"/>
+                        <field name="secondary_contact_position"/>
+                    </group>
+                    <group>
+                        <field name="is_active"/>
+                        <field name="notify"/>
+                        <field name="phone_extenstion"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+
+
+
+
 
          <record id="smarttship_sync_wizard_view" model="ir.ui.view">
             <field name="name">smarttship.sync.wizard.viewss</field>
