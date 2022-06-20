@@ -126,8 +126,10 @@ class ResPartner(models.Model):
                         "CustomerName": rec.name,
                         "Address": rec.street + ' ' + rec.street2,
                         "CityID": city_id.id,
-                        "StateID": state_id,
-                        "CountryID": country_id,
+                        # "StateID": state_id,
+                        "StateID": 1,
+                        # "CountryID": country_id,
+                        "CountryID": 1,
                         "ZipCode": zip_code,
                         "EmailID": email,
                         "PrimaryPhone": primary_phone,
@@ -159,3 +161,63 @@ class ResPartner(models.Model):
             else:
                 raise ValidationError(_(str('Some required fields in Smarttship are empty.')))
         return rec
+
+
+    def write(self, vals):
+        res = super(ResPartner, self).write(vals)
+        print('testing write')
+        if self.smarttship_customer_id != 0 and self.smarttship_customer_id != False:
+            if self.smarttship_customer == True:
+                print('development of customer')
+                url = "https://api.sandbox.smarttshipping.ca/api/carrierApi/AddOrEditCustomer"
+                headers = {
+                    'apikey': '7474CAE8-35BA-47DE-983D-2DE16EDEB118',
+                    'Content-Type': 'application/json'
+                }
+                city_id = self.env['res.city.smarttship'].search([('city_name', '=', self.city)])
+                state_id = self.state_id.smarttship_state_id
+                country_id = self.country_id.id
+                zip_code = self.zip
+                email = self.email
+                primary_phone = self.phone
+                if city_id and state_id and country_id and zip_code and email and primary_phone:
+                    payload = json.dumps({
+                            "CustomerID": self.smarttship_customer_id,
+                            "CustomerName": self.name,
+                            "Address": self.street + ' ' + self.street2,
+                            "CityID": 1,
+                            "StateID": 1,
+                            "CountryID": 1,
+                            # "CityID": city_id.id,
+                            # "StateID": state_id,
+                            # "CountryID": country_id,
+                            "ZipCode": zip_code,
+                            "EmailID": email,
+                            "PrimaryPhone": primary_phone,
+                            "SpecialInstructions": self.special_instructions if self.special_instructions else False,
+                            "BrokerName": self.broker_name if self.broker_name else False,
+                            "SecondaryPhone": self.secondary_phone if self.secondary_phone else False,
+                            "Website": self.website if self.website else False,
+                            "ContactName": self.contact_name if self.contact_name else False,
+                            "OpeningTime": str(self.opening_time.strftime('%Y-%m-%dT%H:%M:%S')) if self.opening_time else False,
+                            "ClosingTime": str(self.closing_time.strftime('%Y-%m-%dT%H:%M:%S')) if self.closing_time else False,
+                            "AccountNo": self.account_no if self.account_no else False,
+                            "PrimaryContactPosition": self.primary_contact_position if self.primary_contact_position else False,
+                            "PrimaryContactPhone": self.primary_contact_phone if self.primary_contact_phone else False,
+                            "SecondaryContactName": self.secondary_contact_name if self.secondary_contact_name else False,
+                            "SecondaryContactPosition": self.secondary_contact_position if self.secondary_contact_position else False,
+                            "AdditionalNotes": self.comment if self.comment else False,
+                            "IsActive": self.is_active if self.is_active else False,
+                            "Notify": self.notify if self.notify else False,
+                            "PhoneExtension": self.phone_extenstion if self.phone_extenstion else False
+                        })
+
+                    response = requests.request("POST", url, headers=headers, data=payload)
+                    response_dict = json.loads(response.text)
+                    if response_dict.get('Success') == True:
+                        print('response successful')
+                    else:
+                        raise ValidationError(_(str(response_dict.get('Message'))))
+                else:
+                    raise ValidationError(_(str('Some required fields in Smarttship are empty.')))
+        return res
