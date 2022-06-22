@@ -19,6 +19,7 @@ class SmarttshipSync(models.Model):
 
     sync_city = fields.Boolean(string='Sync Cities')
     sync_state = fields.Boolean(string='Sync States')
+    sync_customer = fields.Boolean(string='Sync Customers')
 
 
     def sync_records(self):
@@ -221,3 +222,9 @@ class ResPartner(models.Model):
                 else:
                     raise ValidationError(_(str('Some required fields in Smarttship are empty.')))
         return res
+
+
+class SaleOrder(models.Model):
+    _inherit = 'sale.order'
+
+    delivery_package = fields.Many2one('product.packaging', string='Delivery Package')

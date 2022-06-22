@@ -2,6 +2,16 @@
 <odoo>
     <data>
 
+        <record id="sale_order_form_inherit_delivery_package" model="ir.ui.view">
+        <field name="name">sale.order.form.inherit.ksa</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='sale_order_template_id']" position="after">
+                <field name="delivery_package"/>
+            </xpath>
+        </field>
+    </record>
 
         <record id="view_partner_form_inherit_smarttship" model="ir.ui.view">
         <field name="name">view.partner.form.inherit.smarttship</field>
@@ -51,6 +61,7 @@
                     <group>
                         <field name="sync_city"/>
                         <field name="sync_state"/>
+                        <field name="sync_customer"/>
                     </group>
                     <footer>
                         <button name="sync_records" string="Done" class="btn-secondary" type="object"/>
