@@ -1,4 +1,3 @@
-import logging
 import requests
 import json
 import random
@@ -28,6 +27,53 @@ class SmarttshipSync(models.Model):
             self.fetch_cities()
         if self.sync_state:
             self.fetch_states()
+        if self.sync_customer:
+            self.sync_customers()
+
+    def sync_customers(self):
+        print('working on customer sync option')
+        url = "https://api.sandbox.smarttshipping.ca/api/carrierApi/GetAllCustomers"
+        headers = {
+            'apikey': '7474CAE8-35BA-47DE-983D-2DE16EDEB118',
+            'Content-Type': 'application/json'
+        }
+        payload = json.dumps({})
+        response = requests.request("GET", url, headers=headers, data=payload)
+        response_dict = json.loads(response.text)
+        if response_dict.get('Success') == True:
+            for customer in response_dict.get('Customers'):
+                print('testing print')
+                available_customer = self.env['res.partner'].search([('smarttship_customer_id', '=', customer.get('CustomerID'))])
+                state = self.env['res.country.state'].search([('smarttship_state_id', '=', customer.get('StateID'))], limit=1)
+                if not available_customer:
+                    customer_dict = {
+                        'smarttship_customer_id': customer.get('CustomerID'),
+                        'name': customer.get('CustomerName'),
+                        'street': customer.get('Address'),
+                        'zip': customer.get('zip'),
+                        'email': customer.get('EmailID'),
+                        'phone': customer.get('PrimaryPhone'),
+                        'special_instructions': customer.get('SpecialInstructions'),
+                        'broker_name': customer.get('broker_name'),
+                        'secondary_phone': customer.get('SecondaryPhone'),
+                        'website': customer.get('Website'),
+                        'contact_name': customer.get('ContactName'),
+                        # 'opening_time': customer.get('OpeningTime'),
+                        # 'closing_time': customer.get('ClosingTime'),
+                        'account_no': customer.get('AccountNo'),
+                        'primary_contact_position': customer.get('PrimaryContactPosition'),
+                        'primary_contact_phone': customer.get('PrimaryContactPosition'),
+                        'secondary_contact_name': customer.get('SecondaryContactName'),
+                        'secondary_contact_position': customer.get('secondary_contact_position'),
+                        'comment': customer.get('AdditionalNotes'),
+                        'is_active': customer.get('IsActive'),
+                        'notify': customer.get('Notify'),
+                        'phone_extenstion': customer.get('PhoneExtension'),
+                        'city': customer.get('CityName').lower().capitalize(),
+                        'state_id': state.id if state else False,
+                        'smarttship_customer': True
+                    }
+                    customer = self.env['res.partner'].create(customer_dict)
 
     def fetch_cities(self):
         url = "https://api.sandbox.smarttshipping.ca/api/carrierapi/GetCities"
@@ -62,7 +108,7 @@ class SmarttshipSync(models.Model):
             country = self.env['res.country'].search([('name', '=', 'Canada')])
             if country:
                 for state in response_dict.get('States'):
-                    available_state = self.env['res.country.state'].search([('name', '=', state.get('StateName').lower().capitalize())])
+                    available_state = self.env['res.country.state'].search([('smarttship_state_id', '=', state.get('StateId'))])
                     if not available_state:
                         res_state = self.env['res.country.state'].create({
                             'smarttship_state_id': state.get('StateId'),
@@ -73,6 +119,7 @@ class SmarttshipSync(models.Model):
                         })
                     else:
                         available_state.smarttship_state_code = state.get('StateAbb')
+                        available_state.smarttship_state_id = state.get('StateId')
             print('state success')
 
 class ResCitySmartship(models.Model):
