@@ -45,6 +45,9 @@
                     </group>
                 </page>
             </xpath>
+            <xpath expr="//field[@name='city']" position="after">
+                <field name="city_id"></field>
+            </xpath>
         </field>
     </record>
 

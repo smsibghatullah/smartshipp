@@ -10,6 +10,7 @@ class SmartshipShippingCharge(models.Model):
     smartship_service_name = fields.Char(string="service name", help="smartship service name")
     smartship_total_charge = fields.Float(string="total charge", help="rate given by smartship")
     sale_order_id = fields.Many2one("sale.order", string="sales order")
+    carrier_body = fields.Text(string="Carrier Body")
 
     def set_service(self):
         self.ensure_one()

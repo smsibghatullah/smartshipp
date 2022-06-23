@@ -71,7 +71,7 @@ class SmarttshipSync(models.Model):
                         'phone_extenstion': customer.get('PhoneExtension'),
                         'city': customer.get('CityName').lower().capitalize(),
                         'state_id': state.id if state else False,
-                        'smarttship_customer': True
+                        'smarttship_customer': False
                     }
                     customer = self.env['res.partner'].create(customer_dict)
 
@@ -124,6 +124,7 @@ class SmarttshipSync(models.Model):
 
 class ResCitySmartship(models.Model):
     _name = "res.city.smarttship"
+    _rec_name = "city_name"
 
 
     city_id = fields.Integer(string='City ID')
@@ -150,6 +151,7 @@ class ResPartner(models.Model):
     is_active = fields.Boolean(string='Is Active')
     notify = fields.Boolean(string='Is Active')
     phone_extenstion = fields.Char(string='Phone Extension')
+    city_id = fields.Many2one("res.city.smarttship", string="City")
 
     @api.model
     def create(self, vals):

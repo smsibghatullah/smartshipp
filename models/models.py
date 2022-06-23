@@ -26,8 +26,8 @@ class DeliveryCarrier(models.Model):
 
         weight = sum(
             [(line.product_id.weight * line.product_uom_qty) for line in orders.order_line if not line.is_delivery])
-        shipper_address = orders.warehouse_id and orders.warehouse_id.partner_id
-        recipient_address = orders.partner_shipping_id
+        # shipper_address =  orders.partner_id
+        shipper_address = orders.partner_shipping_id
 
         # sender_data.attrib["id"] = str(shipper_address.id)
         # sender_data.attrib["company"] = shipper_address.name
@@ -47,12 +47,12 @@ class DeliveryCarrier(models.Model):
             "IsImperial": True,
             "ShipmentItems": [
                 {
-                    "Quantity": 1,
+                    "Quantity": "1",
                     "Width": 5,
                     "Length": 5,
                     "Height": 6,
                     "Weight": weight,
-                    "PackageId": "85",
+                    "PackageId": orders.delivery_package.pkg_id,
                     "ProductId": "3076",
                     "IsStackable": True,
                     "IsDangerous": False,
@@ -63,12 +63,12 @@ class DeliveryCarrier(models.Model):
             "ShipmentCustomers": [
                 {
                     "CustomerId": 0,
-                    "CityId": 24354,
+                    "CityId": shipper_address.city_id.city_id,
                     "City": shipper_address.city or "",
-                    "StateId": "%s" % (shipper_address.state_id and shipper_address.state_id.id or ""),
-                    "countryId": "%s" % (shipper_address.country_id and shipper_address.country_id.id or ""),
+                    "StateId": "%s" % (shipper_address.state_id and shipper_address.state_id.smarttship_state_id or ""),
+                    "countryId": 1,# "%s" % (shipper_address.country_id and shipper_address.country_id.id or ""),
                     "Name": shipper_address.name,
-                    "PostalCode": "%s" % (shipper_address.zip or ""),
+                    "PostalCode": "%s" % (shipper_address.zip or "V0X 1K0"),
                     "IsShipFrom": "false"
                 }
             ],
@@ -87,7 +87,7 @@ class DeliveryCarrier(models.Model):
             'apikey': '7474CAE8-35BA-47DE-983D-2DE16EDEB118',
             'Content-Type': 'application/json'
         }
-
+        print(payload)
         response = requests.request("POST", url, headers=headers, data=payload)
         response_dicts = json.loads(response.text)
         # print(response_data.text)
@@ -105,6 +105,7 @@ class DeliveryCarrier(models.Model):
                 smartship_service_id = response_dict.get('ServiceCode')
                 smartship_service_name = response_dict.get('ServiceName')
                 smartship_total_charge = response_dict.get('Price')
+                carrier_body = response_dict
                 smartship_shipping_charge_obj.sudo().create(
                     {
                         'smartship_carrier_id': smartship_carrier_id,
@@ -112,7 +113,8 @@ class DeliveryCarrier(models.Model):
                         'smartship_service_id': smartship_service_id,
                         'smartship_service_name': smartship_service_name,
                         'smartship_total_charge': smartship_total_charge,
-                        'sale_order_id': orders and orders.id
+                        'sale_order_id': orders and orders.id,
+                        'carrier_body':carrier_body
                     }
                 )
             smartship_charge_id = smartship_shipping_charge_obj.search(
@@ -133,13 +135,21 @@ class DeliveryCarrier(models.Model):
     def smartship_send_shipping(self, pickings):
         """This Method Is Used For Send The Shipping Request To Shipper"""
         response = []
+        import requests
+        import json
+        import ast
+
         for picking in pickings:
             total_bulk_weight = picking.weight_bulk
             recipient_address = picking.partner_id
-            shipper_address = picking.picking_type_id.warehouse_id.partner_id
+            shipper_address = picking.sale_id.partner_id
+            carrier_body = picking.sale_id.smartship_shipping_charge_id.carrier_body
+            carrier_body = carrier_body.replace("\'", "\"")
+            convertedDict = ast.literal_eval(carrier_body)
+            picking.sale_id.delivery_package.pkg_id
+            # carrier_body_json = json.loads(carrier_body)
 
-            import requests
-            import json
+
 
             url = "https://api.sandbox.smarttshipping.ca/api/carrierapi/CreateDispatch"
 
@@ -152,8 +162,8 @@ class DeliveryCarrier(models.Model):
                         "Length": 5,
                         "Height": 6,
                         "Weight": total_bulk_weight,
-                        "PackageId": "85",
-                        "ProductId": 3076,
+                        "PackageId": picking.sale_id.delivery_package.pkg_id,
+                        "ProductId": "3076",
                         "IsStackable": True,
                         "IsDangerous": False,
                         "ShipmentContainsDGItems": []
@@ -163,12 +173,13 @@ class DeliveryCarrier(models.Model):
                 "ShipmentCustomers": [
                     {
                         "CustomerId": 0,
-                        "CityId": 24354,
-                        "City": "Hedley",
-                        "StateId": 6,
+                        "CityId": shipper_address.city_id.city_id,
+                        "City": shipper_address.city or "",
+                        "StateId": "%s" % (
+                                    shipper_address.state_id and shipper_address.state_id.smarttship_state_id or ""),
                         "countryId": 1,
-                        "Name": "TEST CONSGINEE",
-                        "PostalCode": "V0X 1K0",
+                        "Name": shipper_address.name,
+                        "PostalCode": "%s" % (shipper_address.zip or "V0X 1K0"),
                         "IsShipFrom": "false",
                         "Address": "123 MAIN STREET",
                         "Phone": "6667778888",
@@ -180,33 +191,19 @@ class DeliveryCarrier(models.Model):
                 "IsAllServices": True,
                 "Fragile": "false",
                 "SaturdayDelivery": "false",
-                "NoSignatureRequired": "true",
+                "NoSignatureRequired": "false",
                 "ResidentialSignature": "false",
                 "SpecialHandling": "false",
                 "IsReturnShipment": "false",
                 "DropOff": "false",
-                "SelectedCarrier": {
-                    "CarrierId": 2931,
-                    "CarrierName": "CANADA POST",
-                    "TransitDays": "6",
-                    "ServiceName": "Library Materials",
-                    "ServiceCode": "DOM.LIB",
-                    "Price": 6.33,
-                    "CarrierQuoteNumber": "",
-                    "APIRatesEnabled": True,
-                    "APIDocumentEnabled": True,
-                    "APIDispatchEnabled": True,
-                    "IsPriceInUsd": False,
-                    "PickupAvailableFromDate": "2022-05-26",
-                    "Message": None,
-                    "Currency": "CAD"
-                }
+                "PickUp": "false",
+                "SelectedCarrier": convertedDict
             })
             headers = {
                 'apikey': '7474CAE8-35BA-47DE-983D-2DE16EDEB118',
                 'Content-Type': 'application/json'
             }
-
+            print(payload)
             response = requests.request("POST", url, headers=headers, data=payload)
 
             print(response.text)
