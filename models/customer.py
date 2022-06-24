@@ -19,6 +19,7 @@ class SmarttshipSync(models.Model):
     sync_city = fields.Boolean(string='Sync Cities')
     sync_state = fields.Boolean(string='Sync States')
     sync_customer = fields.Boolean(string='Sync Customers')
+    sync_package = fields.Boolean(string='Sync Package')
 
 
     def sync_records(self):
@@ -29,6 +30,43 @@ class SmarttshipSync(models.Model):
             self.fetch_states()
         if self.sync_customer:
             self.sync_customers()
+        if self.sync_package:
+            self.sync_packages()
+
+
+    def sync_packages(self):
+        print('developing sync package')
+        print('test')
+        print('working on customer sync option')
+        url = "https://api.sandbox.smarttshipping.ca/api/carrierApi/GetAllPackages"
+        headers = {
+            'apikey': '7474CAE8-35BA-47DE-983D-2DE16EDEB118',
+            'Content-Type': 'application/json'
+        }
+        payload = json.dumps({})
+        response = requests.request("GET", url, headers=headers, data=payload)
+        response_dict = json.loads(response.text)
+        if response_dict.get('Success') == True:
+            print('testing response data')
+            for package in response_dict.get('Packages'):
+                available_package = self.env['product.packaging'].search([('pkg_id', '=', package.get('PackageID'))])
+                if not available_package:
+                    package_dict = {
+                        'pkg_id': package.get('PackageID'),
+                        'shipper_id': package.get('ShipperID'),
+                        'name': package.get('PackageTypeName'),
+                        # 'smart_date_aaded': package.get('DateAdded'),
+                        # 'smart_date_edited': package.get('DateEdited'),
+                        'is_active': package.get('IsActive'),
+                        'is_default_type': package.get('IsDefaultPackageType'),
+                        'carrier_record_id': package.get('CarrierId'),
+                        'width': package.get('Width'),
+                        'packaging_length': package.get('Length'),
+                        'height': package.get('Height'),
+                        'is_courier': package.get('IsCourier'),
+                        'max_weight': package.get('MaxWeight'),
+                    }
+                    new_package = self.env['product.packaging'].create(package_dict)
 
     def sync_customers(self):
         print('working on customer sync option')
