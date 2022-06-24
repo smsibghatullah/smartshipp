@@ -1,9 +1,10 @@
 import logging
 import requests
 import json
-
+import binascii
 from odoo import models, fields, api, _
 from odoo.exceptions import Warning, ValidationError, UserError
+import urllib
 
 _logger = logging.getLogger("Smartshipping")
 
@@ -138,7 +139,7 @@ class DeliveryCarrier(models.Model):
         import requests
         import json
         import ast
-
+        res = []
         for picking in pickings:
             total_bulk_weight = picking.weight_bulk
             recipient_address = picking.partner_id
@@ -207,8 +208,22 @@ class DeliveryCarrier(models.Model):
             response = requests.request("POST", url, headers=headers, data=payload)
 
             print(response.text)
+            response_dicts = json.loads(response.text)
+            if response.status_code in [200, 201] and response_dicts['Success']:
+                tracking_number = response_dicts['ShipmentResponse']['TrackingNumber']
+                tracking_url = response_dicts['ShipmentResponse']['TrackingUrl']
+                label_data = response_dicts['ShipmentResponse']['BolPath']
+                picking.smartship_order_id = tracking_number
+                picking.smartship_tracking_url = tracking_url
+                logmessage = ("<b>Tracking Number:</b> %s") % (tracking_number)
+                picking.message_post(body=logmessage, attachments=[("%s.pdf" % (tracking_number), requests.get(label_data).content)])
 
-            return [response]
+                shipping_data = {'exact_price': 0.0, 'tracking_number': tracking_number}
+                res += [shipping_data]
+                return res
+            else:
+                raise ValidationError(response_dicts)
+
 
 
 
